@@ -1,1 +1,3 @@
-Vinny;2x1;100
+Vinny;1x2;100.0
+Edecio;1x2;100
+Amanda;1x2;200

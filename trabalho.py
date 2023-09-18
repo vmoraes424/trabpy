@@ -9,13 +9,31 @@ total_vasco = 0
 total_sorocaba = 0
 total_empate = 0
 
+
 def salvaDados():
     with open("apostas.txt", "w") as arq:
         for i in range(len(nomes)):
             arq.write(f"{nomes[i]};{apostas[i]};{valores[i]}\n")
 
+
 def carregaDados():
-    pass
+    global nomes, apostas, valores, total_vasco, total_sorocaba, total_empate
+    with open("apostas.txt", "r") as arq:
+        for linha in arq:
+            nome, palpite, valor = linha.strip().split(";")
+            nomes.append(nome)
+            apostas.append(palpite)
+            valores.append(float(valor))
+            gols_palpite = palpite.split("x")
+            gols_vasco = int(gols_palpite[0].strip())
+            gols_sorocaba = int(gols_palpite[1].strip())
+            if gols_vasco > gols_sorocaba:
+                total_vasco += 1
+            elif gols_sorocaba > gols_vasco:
+                total_sorocaba += 1
+            else:
+                total_empate += 1
+
 
 def cadastrar():
     global total_vasco
@@ -30,7 +48,7 @@ def cadastrar():
     apostas.append(palpite)
     valores.append(valor)
 
-    gols_palpite = palpite.split('x')
+    gols_palpite = palpite.split("x")
     gols_vasco = int(gols_palpite[0].strip())
     gols_sorocaba = int(gols_palpite[1].strip())
 
@@ -43,11 +61,11 @@ def cadastrar():
 
 
 def calcularResultado(palpite):
-    gols_time1, gols_time2 = map(int, palpite.split('x'))
+    gols_time1, gols_time2 = map(int, palpite.split("x"))
     if gols_time1 > gols_time2:
-        return f"{time1} venceu"
+        return f"{time1}"
     elif gols_time1 < gols_time2:
-        return f"{time2} venceu"
+        return f"{time2}"
     else:
         return "Empate"
 
@@ -59,17 +77,23 @@ def listarResultado():
         print("Resultado das Apostas:")
         for i in range(len(nomes)):
             print("")
-            print(f"{nomes[i]} apostou em '{apostas[i]}'. Resultado: {calcularResultado(apostas[i])}")
+            print(
+                f"{nomes[i]} apostou em '{apostas[i]}'. Palpite: {calcularResultado(apostas[i])}"
+            )
             print("")
 
+
 def listarAposta():
-    pass
+    for aposta in apostas:
+        print(aposta, end=", ")
+
 
 def totalDeApostas():
     print("")
     print("")
     print(f"Total de apostas: {len(nomes)}")
     print(f"Total apostado: R${sum(valores)}")
+
 
 def totalDeApostasPorResultado():
     print("")
@@ -80,30 +104,44 @@ def totalDeApostasPorResultado():
     print(f"{time2}: {total_sorocaba} apostas")
     print(f"Empate: {total_empate} apostas")
 
+
 def resultadoPremiacao(resultado):
-    global total_vasco
-    global total_sorocaba
-    global total_empate
+    global total_vasco, total_sorocaba, total_empate
 
-    gols_vasco, gols_sorocaba = map(int, resultado.split('x'))
+    gols_vasco, gols_sorocaba = map(int, resultado.split("x"))
 
-    total_apostado = total_vasco + total_sorocaba + total_empate
+    total_apostado = sum(valores)
 
+    print("")
+    print("")
     print("Resultado da partida:", resultado)
-
-    print("Ganhadores:")
-    if gols_vasco > gols_sorocaba:
-        print(f"- Apostas em {time1} ganharam. Cada apostador receberá o dobro do valor apostado.")
-        premio = 2 * total_vasco
-    elif gols_sorocaba > gols_vasco:
-        print(f"- Apostas em {time2} ganharam. Cada apostador receberá o dobro do valor apostado.")
-        premio = 2 * total_sorocaba
-    else:
-        print("- Apostas em empate ganharam. Cada apostador receberá o dobro do valor apostado.")
-        premio = 2 * total_empate
-
     print("Total apostado:", total_apostado)
-    print("Total a ser distribuído em prêmios:", premio)
+
+    apostadores_ganhadores = []
+
+    if gols_vasco > gols_sorocaba:
+        print(f"Ganhadores apostando em {time1}:")
+        for i in range(len(nomes)):
+            if apostas[i] == f"{gols_vasco}x{gols_sorocaba}":
+                apostadores_ganhadores.append(nomes[i])
+    elif gols_sorocaba > gols_vasco:
+        print(f"Ganhadores apostando em {time2}:")
+        for i in range(len(nomes)):
+            if apostas[i] == f"{gols_vasco}x{gols_sorocaba}":
+                apostadores_ganhadores.append(nomes[i])
+    else:
+        print("Ganhadores apostando em empate:")
+        for i in range(len(nomes)):
+            if apostas[i] == f"{gols_vasco}x{gols_sorocaba}":
+                apostadores_ganhadores.append(nomes[i])
+
+    if len(apostadores_ganhadores) == 0:
+        print("Nenhum ganhador para este resultado.")
+    else:
+        premio_por_apostador = total_apostado / len(apostadores_ganhadores)
+        for apostador in apostadores_ganhadores:
+            print(f"- {apostador} ganhou R${premio_por_apostador:.2f}")
+
 
 carregaDados()
 while True:
@@ -133,9 +171,7 @@ while True:
     elif res == 5:
         totalDeApostasPorResultado()
     elif res == 6:
-        resultado = calcularResultado(f'{time1} x {time2}')
-        print("Resultado do jogo:", resultado)
-        resultadoPremiacao(resultado)
+        resultadoPremiacao("1x2")
     elif res == 7:
         salvaDados()
         break
